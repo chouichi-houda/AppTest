@@ -15,7 +15,7 @@ import app.test.spring.entity.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-	Optional<User> findByLoginIgnoreCase(String login);
+
 	Optional<User> findByEmailIgnoreCase(String email);
 
 }

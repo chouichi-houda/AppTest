@@ -12,8 +12,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,14 +19,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
-import app.test.spring.auth.AuthUser;
+import app.test.spring.entity.User;
+import jakarta.servlet.http.HttpServletRequest;
 
 //@Component
 public class JWTTokenProvider {
@@ -36,7 +34,7 @@ public class JWTTokenProvider {
 	@Value("${jwt.secret}")
 	private String secret;
 	
-	public String generateJWTToken(AuthUser authUser) {
+	public String generateJWTToken(User authUser) {
 		String[] claims = getClaimsFromUser(authUser);
 		return JWT.create().withIssuer(GET_ARRAYS_LLC)
 						   .withAudience(GET_ARRAYS_ADMINISTRATION)
@@ -92,7 +90,7 @@ public class JWTTokenProvider {
 		return verifier;
 	}
 
-	private String[] getClaimsFromUser(AuthUser user) {
+	private String[] getClaimsFromUser(User user) {
 		List<String> authorities = new ArrayList<>();
 		for(GrantedAuthority grantedAuthority: user.getAuthorities()) {
 			authorities.add(grantedAuthority.getAuthority());

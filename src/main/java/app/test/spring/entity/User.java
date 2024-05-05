@@ -1,21 +1,23 @@
 package app.test.spring.entity;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.Collection;
+import java.util.List;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
-import javax.persistence.Table;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import app.test.spring.enumeration.Role;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +33,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements Serializable{
+public class User implements Serializable, UserDetails{
 
 	
 	/**
@@ -63,9 +65,6 @@ public class User implements Serializable{
 	@Column(name = "EMAIL", length = 150, nullable = false)
 	private String email;
 	
-	@Column(name = "LOGIN", length = 30, nullable = false)
-	private String login;
-	
 	/**
 	 * Password
 	 */
@@ -73,26 +72,51 @@ public class User implements Serializable{
 	private String password;
 	
 	/**
-	 * Expiration date password.
+	 * user role
 	 */
-	@Column(name = "EXPIRATION_DATE_PASSWORD")
-	private LocalDate expirationPwdDate;
-
-	/**
-	 * Security code.
-	 */
-	@Column(name = "SECURITY_CODE", length = 10)
-	private String securityCode;
-
-	/**
-	 * Security code generation date.
-	 */
-	@Column(name = "SECURITY_CODE_EXPIRATION_DATETIME")
-	private LocalDateTime securityCodeExpirationDate;
+	@Column(name = "USER_ROLE", length = 20, nullable = false)
+	@Enumerated(EnumType.STRING)
+	private Role role;
 	
-	@OrderBy("id")
-	@OneToMany(fetch = FetchType.LAZY, targetEntity = UserProfile.class, cascade = {CascadeType.ALL}, mappedBy = "user", orphanRemoval = true)
-	private Set<UserProfile> profiles;
+	
+	@OneToOne
+	private UserProfile profile;
+
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return List.of(new SimpleGrantedAuthority(role.name()));
+	}
+
+	@Override
+	public String getPassword() {
+		return password;
+	}
+
+	@Override
+	public String getUsername() {
+		return email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
 	
 	
 

@@ -1,9 +1,9 @@
 package app.test.spring.enumeration;
 
-public enum UserTypeEnum {
+public enum Role {
 
    ADMINISTRATOR,
 	
-	EMPLOYEE
+	USER
 	
 }

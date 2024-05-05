@@ -10,7 +10,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import app.test.spring.auth.AuthUser;
 import app.test.spring.constant.ApplicationConstants.LoginErrorCodes;
 import app.test.spring.constant.ApplicationConstants.UserErrorCodes;
 import app.test.spring.entity.User;
@@ -79,19 +78,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 			throw new BadRequestException(UserErrorCodes.DUPLICATED_USER_EMAIL, "");
 		}
 		
-		testUser = userRepository.findByLoginIgnoreCase(user.getLogin());
-		if ((testUser.isPresent() && isUpdate && !testUser.get().getId().equals(user.getId()))
-				|| (testUser.isPresent() && !isUpdate)) {
-			throw new BadRequestException(UserErrorCodes.DUPLICATED_USER_LOGIN, "");
-		}
 		return userRepository.save(user);
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		User user = userRepository.findByLoginIgnoreCase(username)
+		User user = userRepository.findByEmailIgnoreCase(username)
 				.orElseThrow(() -> new DataNotFoundException(LoginErrorCodes.USER_NOT_FOUND, ""));
-		return new AuthUser(user);
+		return user;
 	}
 
 }

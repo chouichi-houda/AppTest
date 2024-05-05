@@ -3,8 +3,6 @@ package app.test.spring.rest.controller;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.test.spring.auth.AuthUser;
 import app.test.spring.auth.LoginRequest;
 import app.test.spring.auth.LoginResponse;
 import app.test.spring.config.JWTAuthorizationFilter;
@@ -31,6 +28,7 @@ import app.test.spring.exception.BadRequestException;
 import app.test.spring.repository.UserRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * @author houda
@@ -52,7 +50,7 @@ public class LoginController {
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public ResponseEntity<LoginResponse> authenticateUser(@RequestBody LoginRequest loginRequest,
 			HttpServletRequest request) {
-		AuthUser userPrincipal = null;
+		User userPrincipal = null;
 		if (StringUtils.isEmpty(loginRequest.getLogin())) {
 			throw new BadRequestException(LoginErrorCodes.MISSING_LOGIN, "");
 		}
@@ -65,10 +63,10 @@ public class LoginController {
 		try {
 			authentication = authenticationManager.authenticate(
 					new UsernamePasswordAuthenticationToken(loginRequest.getLogin(), loginRequest.getPassword()));
-			 userPrincipal = (AuthUser) authentication.getPrincipal();
+			 userPrincipal = (User) authentication.getPrincipal();
 
 			if (userPrincipal != null) {
-				User user = userRepository.findByLoginIgnoreCase(loginRequest.getLogin())
+				User user = userRepository.findByEmailIgnoreCase(loginRequest.getLogin())
 						.get();
 				jwt = generateToken(userPrincipal, user);
 			}
@@ -77,7 +75,7 @@ public class LoginController {
 		} catch (DisabledException e) {
 			throw new BadRequestException(LoginErrorCodes.ACCOUNT_DISABLED, "");
 		} catch (CredentialsExpiredException e) {
-			User user = userRepository.findByLoginIgnoreCase(loginRequest.getLogin())
+			User user = userRepository.findByEmailIgnoreCase(loginRequest.getLogin())
 					.get();
 		jwt  = generateTokenPwdExpired( user);
 		} catch (AuthenticationException e) {
@@ -87,7 +85,7 @@ public class LoginController {
 		return ResponseEntity.ok().body(new LoginResponse(jwt));
 	}
 
-	private String generateToken(AuthUser userPrincipal, User user) {
+	private String generateToken(User userPrincipal, User user) {
 		return Jwts.builder().setSubject(userPrincipal.getUsername()).setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, JWTAuthorizationFilter.SECRET).claim("email", user.getEmail())
@@ -98,7 +96,7 @@ public class LoginController {
 	}
 	
 	private String generateTokenPwdExpired(User user) {
-		return Jwts.builder().setSubject(user.getLogin()).setIssuedAt(new Date())
+		return Jwts.builder().setSubject(user.getEmail()).setIssuedAt(new Date())
 				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS256, JWTAuthorizationFilter.SECRET).claim("email", user.getEmail())
 				.claim("lastname", user.getLastName()).claim("firstname", user.getFirstName())
